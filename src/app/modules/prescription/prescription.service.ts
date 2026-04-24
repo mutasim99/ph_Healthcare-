@@ -3,6 +3,8 @@ import AppError from "../../errorHelper/AppError";
 import { IRequestUser } from "../../interfaces/requestUser.interface";
 import { prisma } from "../../lib/prisma";
 import { ICreatePrescriptionPayload } from "./prescription.interface";
+import { generatePrescriptionPDF } from "./prescription.utils";
+import { uploadFileToCloudinary } from "../../config/cloudinary.config";
 
 const givePrescription = async (
   user: IRequestUser,
@@ -23,6 +25,11 @@ const givePrescription = async (
       doctor: {
         include: {
           specialties: true,
+        },
+      },
+      schedule: {
+        include: {
+          DoctorSchedule: true,
         },
       },
     },
@@ -59,7 +66,33 @@ const givePrescription = async (
         patientId: appointmentData.patientId,
       },
     });
-    return result;
+
+    const pdfBuffer = await generatePrescriptionPDF({
+      doctorName: doctorData.name,
+      patientName: appointmentData.patient.name,
+      appointmentDate: appointmentData.schedule.startDateTime,
+      instructions: payload.instructions,
+      followUpDate,
+      doctorEmail: doctorData.email,
+      patientEmail: appointmentData.patient.email,
+      prescriptionId: result.id,
+      createAt: new Date(),
+    });
+
+    const fileName = `Prescription-${Date.now()}.pdf`;
+    const uploadFile = await uploadFileToCloudinary(pdfBuffer, fileName);
+    const pdfUrl = uploadFile.secure_url;
+
+    const updatePrescription = await tx.prescription.update({
+      where: {
+        id: result.id,
+      },
+      data: {
+        pdfUrl,
+      },
+    });
+
+    return updatePrescription;
   });
   return result;
 };

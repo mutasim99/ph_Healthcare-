@@ -6,10 +6,10 @@ interface PrescriptionData {
   doctorEmail: string;
   patientName: string;
   patientEmail: string;
-  followUpDate: string;
+  followUpDate: Date;
   instructions: string;
   prescriptionId: string;
-  appointmentDate: string;
+  appointmentDate: Date;
   createAt: Date;
 }
 
