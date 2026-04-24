@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "specialties" ALTER COLUMN "title" SET DATA TYPE TEXT,
+ALTER COLUMN "icons" SET DATA TYPE TEXT;
