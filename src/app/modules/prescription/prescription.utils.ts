@@ -10,7 +10,7 @@ interface PrescriptionData {
   instructions: string;
   prescriptionId: string;
   appointmentDate: Date;
-  createAt: Date;
+  createdAt: Date;
 }
 
 export const generatePrescriptionPDF = async (
@@ -91,7 +91,7 @@ export const generatePrescriptionPDF = async (
         )
         .text(
           `Issued Date:${new Date(
-            prescriptionData.createAt
+            prescriptionData.createdAt
           ).toLocaleDateString()}`
         );
 
