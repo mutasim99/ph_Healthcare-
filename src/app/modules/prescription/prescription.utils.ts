@@ -1,0 +1,149 @@
+import PDFDocument from "pdfkit";
+import { envVars } from "../../config/env";
+
+interface PrescriptionData {
+  doctorName: string;
+  doctorEmail: string;
+  patientName: string;
+  patientEmail: string;
+  followUpDate: string;
+  instructions: string;
+  prescriptionId: string;
+  appointmentDate: string;
+  createAt: Date;
+}
+
+export const generatePrescriptionPDF = async (
+  prescriptionData: PrescriptionData
+): Promise<Buffer> => {
+  return new Promise((resolve, reject) => {
+    try {
+      const doc = new PDFDocument({
+        size: "A4",
+        margin: 50,
+      });
+
+      const chunks: Buffer[] = [];
+
+      doc.on("data", (chunk) => {
+        chunks.push(chunk);
+      });
+
+      doc.on("end", () => {
+        resolve(Buffer.concat(chunks));
+      });
+
+      doc.on("error", (error) => {
+        reject(error);
+      });
+
+      /* Title */
+      doc.fontSize(24).font("Helvetica-Bold").text("PRESCRIPTION", {
+        align: "center",
+      });
+
+      doc.moveDown(0.5);
+
+      doc.fontSize(10).font("Helvetica").text("PH Healthcare Services", {
+        align: "center",
+      });
+
+      doc.text("Your health, Our Priority", { align: "center" });
+
+      doc.moveDown(1);
+
+      /* Horizontal line */
+      doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
+
+      doc.moveDown(1);
+
+      /* Doctor Information */
+      doc
+        .fontSize(10)
+        .font("Helvetica")
+        .text(`Name:${prescriptionData.doctorName}`)
+        .text(`Email:${prescriptionData.doctorEmail}`);
+
+      doc.moveDown(0.8);
+
+      /* Patient information */
+      doc.fontSize(11).font("Helvetica-Bold").text("Patient Information");
+
+      doc
+        .fontSize(10)
+        .font("Helvetica")
+        .text(`Name:${prescriptionData.patientName}`)
+        .text(`Email:${prescriptionData.doctorEmail}`);
+
+      doc.moveDown(0.8);
+
+      /* Appointments and Prescription Details */
+      doc.fontSize(11).font("Helvetica-Bold").text("Prescription Details");
+
+      doc
+        .fontSize(10)
+        .font("Helvetica")
+        .text(`Prescription Id: ${prescriptionData.prescriptionId}`)
+        .text(
+          `Appointment Date: ${new Date(
+            prescriptionData.appointmentDate
+          ).toLocaleDateString()}`
+        )
+        .text(
+          `Issued Date:${new Date(
+            prescriptionData.createAt
+          ).toLocaleDateString()}`
+        );
+
+      if (prescriptionData.followUpDate) {
+        doc.text(
+          `Follow-up Date: ${new Date(
+            prescriptionData.followUpDate
+          ).toLocaleDateString()}`
+        );
+      }
+
+      doc.moveDown(1);
+
+      /* Horizontal line */
+      doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
+      doc.moveDown(1);
+
+      /* Instruction */
+      doc.fontSize(11).font("Helvetica-Bold").text("Instructions");
+      doc.fontSize(10).font("Helvetica");
+
+      // Wrap text for long instructions
+      doc.text(prescriptionData.instructions, {
+        align: "left",
+        width: 445,
+      });
+
+      doc.moveDown(1);
+      /* Horizontal line */
+      doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
+
+      doc.moveDown(1);
+
+      /* Footer */
+      doc
+        .fontSize(9)
+        .font("Helvetica")
+        .text(
+          "This is an electronically generated prescription. Please follow all instructions provided by your doctor.",
+          {
+            align: "center",
+          }
+        );
+
+      doc.text(`For more information, visit:${envVars.FRONTEND_URL}`, {
+        align: "center",
+      });
+
+      /* End the documents */
+      doc.end();
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
