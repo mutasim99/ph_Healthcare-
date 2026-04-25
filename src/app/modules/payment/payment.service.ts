@@ -118,7 +118,7 @@ const handleStripeWebhookEvent = async (event: Stripe.Event) => {
           await sendEmail({
             to: appointment.patient.email,
             subject: `Payment Confirmation & Invoice - Appointment with ${appointment.doctor.name}`,
-            templateName: "Invoice",
+            templateName: "invoice",
             templateData: {
               patientName: appointment.patient.name,
               invoiceId: appointment.payment?.id || paymentId,
